@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DebugActivity">
+
+    <!-- OUTPUT LABELS -->
+    <TextView
+        android:id="@+id/setSpeed_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/setSpeed_label"
+        app:layout_constraintBottom_toTopOf="@+id/speed_label"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
+        android:id="@+id/speed_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/speed_label"
+        app:layout_constraintBottom_toTopOf="@id/temp_label"
+        app:layout_constraintTop_toBottomOf="@+id/setSpeed_label"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
+        android:id="@+id/temp_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/temp_label"
+        app:layout_constraintBottom_toTopOf="@id/voltage_label"
+        app:layout_constraintTop_toBottomOf="@id/speed_label"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
+        android:id="@+id/voltage_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/voltage_label"
+        app:layout_constraintBottom_toTopOf="@id/current_label"
+        app:layout_constraintTop_toBottomOf="@id/temp_label"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
+        android:id="@+id/current_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/current_label"
+        app:layout_constraintBottom_toTopOf="@id/headlight_label"
+        app:layout_constraintTop_toBottomOf="@id/voltage_label"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
+        android:id="@+id/headlight_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/headlight_label"
+        app:layout_constraintTop_toBottomOf="@id/current_label"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+    <!-- END OUTPUT LABELS -->
+
+    <!-- OUTPUT FIELDS -->
+    <TextView
+        android:id="@+id/setSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="84dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/setSpeed_label"
+        tools:layout_editor_absoluteY="30dp" />
+
+    <TextView
+        android:id="@+id/speed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="108dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toBottomOf="@id/setSpeed"
+        app:layout_constraintStart_toEndOf="@+id/speed_label"
+        tools:layout_editor_absoluteY="70dp" />
+
+    <TextView
+        android:id="@+id/temp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:layout_marginStart="68dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toBottomOf="@id/speed"
+        app:layout_constraintStart_toEndOf="@+id/temp_label"
+        tools:layout_editor_absoluteY="109dp" />
+
+    <TextView
+        android:id="@+id/voltage"
+        android:layout_width="4dp"
+        android:layout_height="13dp"
+        android:layout_marginStart="100dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/blank_value"
+        app:layout_constraintStart_toEndOf="@+id/voltage_label"
+        app:layout_constraintTop_toBottomOf="@id/temp" />
+
+    <TextView
+        android:id="@+id/current"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_marginStart="102dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toBottomOf="@id/voltage"
+        app:layout_constraintStart_toEndOf="@+id/current_label"
+        tools:layout_editor_absoluteY="189dp" />
+
+    <TextView
+        android:id="@+id/headlight_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="44dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toBottomOf="@id/current"
+        app:layout_constraintStart_toEndOf="@+id/headlight_label"
+        tools:layout_editor_absoluteY="228dp" />
+    <!-- END OUTPUT FIELDS -->
+
+    <TextView
+        android:id="@+id/setSpeed_slider_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:text="@string/setSpeed_slider_label"
+        app:layout_constraintBottom_toTopOf="@id/setSpeed_slider"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <SeekBar
+        android:id="@+id/setSpeed_slider"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="0dp"
+        android:layout_height="20dp"
+        android:layout_marginBottom="150dp"
+        android:max="17"
+        android:progress="12"
+        app:layout_constraintBottom_toTopOf="@+id/headlight_switch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/headlight_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="150dp"
+        android:text="@string/headlight_status_ON"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="205dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
