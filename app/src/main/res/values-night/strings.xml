@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="connection_label">Connection Status</string>
+    <string name="connection_DISCNTD">Disconnected</string>
+    <string name="connection_CNTD">Connected</string>
     <string name="setSpeed_label">Max Speed:</string>
     <string name="setSpeed_value">%1$d</string>
     <string name="speed_label">Speed:</string>
@@ -14,6 +17,8 @@
     <string name="headlight_value">%1$s</string>
     <string name="blank_value">-</string>
     <string name="setSpeed_slider_label">Set Speed</string>
-    <string name="headlight_status_ON">Headlight On</string>
-    <string name="headlight_status_OFF">Headlight Off</string>
+    <string name="headlight_status_ON">Turn On</string>
+    <string name="headlight_status_OFF">Turn Off</string>
+    <string name="start_blth">Start Scanning</string>
+    <string name="stop_blth">Stop Scanning</string>
 </resources>

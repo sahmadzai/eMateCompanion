@@ -6,6 +6,34 @@
     android:layout_height="match_parent"
     tools:context=".DebugActivity">
 
+    <!-- CONNECTION STATUS -->
+    <TextView
+        android:id="@+id/connection_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="45dp"
+        android:text="@string/connection_label"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/connection_status"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/connection_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="45dp"
+        android:text="@string/connection_DISCNTD"
+        android:textSize="20sp"
+        android:textAllCaps="true"
+        app:layout_constraintTop_toBottomOf="@id/connection_label"
+        app:layout_constraintBottom_toTopOf="@id/setSpeed_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- END CONNECTION STATUS -->
+
     <!-- OUTPUT LABELS -->
     <TextView
         android:id="@+id/setSpeed_label"
@@ -85,10 +113,10 @@
         android:id="@+id/setSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginStart="84dp"
+        android:layout_marginTop="45dp"
+        android:layout_marginStart="78dp"
         android:text="@string/blank_value"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/connection_status"
         app:layout_constraintStart_toEndOf="@+id/setSpeed_label"
         tools:layout_editor_absoluteY="30dp" />
 
@@ -173,11 +201,31 @@
         android:id="@+id/headlight_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="148dp"
         android:text="@string/headlight_status_ON"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/start_blth"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/start_blth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="150dp"
+        android:text="@string/start_blth"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/stop_blth"
+        app:layout_constraintStart_toEndOf="@id/headlight_switch" />
+
+    <Button
+        android:id="@+id/stop_blth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="150dp"
+        android:text="@string/stop_blth"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/start_blth" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
