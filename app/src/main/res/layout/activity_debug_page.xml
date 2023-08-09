@@ -22,8 +22,8 @@
         android:id="@+id/connection_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="45dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="60dp"
         android:text="@string/connection_DISCNTD"
         android:textSize="20sp"
         android:textAllCaps="true"
@@ -36,17 +36,29 @@
 
     <!-- OUTPUT LABELS -->
     <TextView
+        android:id="@+id/odometer_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/odometer_label"
+        app:layout_constraintBottom_toTopOf="@+id/setSpeed_label"
+        app:layout_constraintTop_toTopOf="@id/connection_status"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="79dp" />
+
+    <TextView
         android:id="@+id/setSpeed_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
         android:layout_marginBottom="20dp"
         android:layout_marginStart="80dp"
         android:text="@string/setSpeed_label"
         app:layout_constraintBottom_toTopOf="@+id/speed_label"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/odometer_label"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteX="79dp" />
+        tools:layout_editor_absoluteX="30dp" />
 
     <TextView
         android:id="@+id/speed_label"
@@ -110,13 +122,24 @@
 
     <!-- OUTPUT FIELDS -->
     <TextView
+        android:id="@+id/odometer_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="80dp"
+        android:text="@string/blank_value"
+        app:layout_constraintTop_toBottomOf="@id/connection_status"
+        app:layout_constraintStart_toEndOf="@+id/odometer_label"
+        tools:layout_editor_absoluteY="30dp" />
+
+    <TextView
         android:id="@+id/setSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="20dp"
         android:layout_marginStart="78dp"
         android:text="@string/blank_value"
-        app:layout_constraintTop_toBottomOf="@id/connection_status"
+        app:layout_constraintTop_toBottomOf="@id/odometer_value"
         app:layout_constraintStart_toEndOf="@+id/setSpeed_label"
         tools:layout_editor_absoluteY="30dp" />
 

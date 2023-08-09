@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">eMate Companion</string>
     <string name="connection_label">Connection Status</string>
     <string name="connection_DISCNTD">Disconnected</string>
+    <string name="connection_status_SERCHING">Searching</string>
     <string name="connection_CNTD">Connected</string>
+    <string name="odometer_label">Odometer:</string>
+    <string name="odometer_value">%1$d</string>
     <string name="setSpeed_label">Max Speed:</string>
-    <string name="setSpeed_value">%1$d</string>
+    <string name="setSpeed_value">%.2f</string>
     <string name="speed_label">Speed:</string>
-    <string name="speed_value">%1$d</string>
-    <string name="temp_label">Temperature:</string>
-    <string name="temp_value">%3$d</string>
+    <string name="speed_value">%.2f</string>
+    <string name="temp_label">Temperature (F):</string>
+    <string name="temp_value">%1$d</string>
     <string name="voltage_label">Voltage:</string>
-    <string name="voltage_value">%2$d</string>
+    <string name="voltage_value">%.2d</string>
     <string name="current_label">Current:</string>
-    <string name="current_value">%1$d</string>
+    <string name="current_value">%.2d</string>
     <string name="headlight_label">Headlight Status:</string>
     <string name="headlight_value">%1$s</string>
     <string name="blank_value">-</string>

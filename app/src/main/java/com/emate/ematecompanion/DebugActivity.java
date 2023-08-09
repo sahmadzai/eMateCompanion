@@ -19,8 +19,6 @@ import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -30,18 +28,17 @@ public class DebugActivity extends AppCompatActivity {
      * Class variables that are used to store the different values that are selected by the user
      * and some other constant values.
      */
-    private double conversionFactor = 1.609;
-    private int max_speed = 15; // In kph, default 15mph or 24 kph
-    private int current_speed = 0; // In kph, default 0 mph/kph
+    private float max_speed = 0; // In kph, default 15mph or 24 kph
+    private double current_speed = 0.0; // In kph, default 0 mph/kph
     private final int LENGTH_SHORT = 800;
     private final String LOG_TAG = "DebugActivity";
-    protected String TBS_Command;
+    protected byte[] TBS_Command;
     private TextView connection_status;
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice connectedDevice; // Added variable to store the connected device
     private BluetoothSocket bluetoothSocket; // Added variable to manage the Bluetooth socket
-    private UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // A common UUID for SPP
+    private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // A common UUID for SPP
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -80,7 +77,7 @@ public class DebugActivity extends AppCompatActivity {
         initFields(maxSpeedLabel, currentSpeedLabel, headlightStatusLabel);
 
         // Setup the toggle button(s)
-        initToggleButtons(headlight_switch, headlightStatusLabel);
+        initToggleButtons(headlight_switch);
 
         // Setup the start and stop Bluetooth buttons
         initBluetoothButtons();
@@ -96,7 +93,7 @@ public class DebugActivity extends AppCompatActivity {
     }
 
     private void initFields(TextView maxSpeedLabel, TextView currentSpeedLabel, TextView headlightStatusLabel) {
-        maxSpeedLabel.setText(getString(R.string.setSpeed_value, max_speed));
+        maxSpeedLabel.setText(getString(R.string.setSpeed_value, convertKMPHtoMPH(max_speed)));
         currentSpeedLabel.setText(getString(R.string.speed_value, current_speed));
         Log.v(LOG_TAG, "Setting headlight status");
         headlightStatusLabel.setText(getString(R.string.headlight_value, "OFF"));
@@ -112,14 +109,14 @@ public class DebugActivity extends AppCompatActivity {
         skillSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                max_speed = i + 3;
-                Log.v(LOG_TAG, "Max Speed is now: " + max_speed);
-                String text = "Max Speed is now: " + max_speed;
+                int usr_speed = i + 3;
+                String text = "Max Speed is now: " + usr_speed;
+                Log.v(LOG_TAG, text);
                 Snackbar.make(seekBar, text, Snackbar.LENGTH_SHORT).setDuration(LENGTH_SHORT).show();
 
                 // Set the Max Speed Field
-                maxSpeedLabel.setText(getString(R.string.setSpeed_value, max_speed));
-                TBS_Command = generateByteCommand("a3", max_speed);
+                maxSpeedLabel.setText(getString(R.string.setSpeed_value, (float) usr_speed));
+                TBS_Command = generateByteCommand("a3", usr_speed);
                 sendCommandOverBLTH();
             }
 
@@ -138,11 +135,11 @@ public class DebugActivity extends AppCompatActivity {
      * of the maze, or the walls of the maze. It also sets up a click listener for each button that
      * logs the event.
      */
-    private void initToggleButtons(Button headlight_switch, TextView headlightStatusLabel) {
+    private void initToggleButtons(Button headlight_switch) {
         headlight_switch.setOnClickListener(view -> {
             if (headlight_switch.getText().equals(getString(R.string.headlight_status_ON))) {
                 headlight_switch.setText(R.string.headlight_status_OFF);
-                headlightStatusLabel.setText(getString(R.string.headlight_value, "ON"));
+//                headlightStatusLabel.setText(getString(R.string.headlight_value, "ON"));
                 headlight_switch.setBackgroundColor(ContextCompat.getColor(this, R.color.dark_gray));
                 Log.v(LOG_TAG, "Headlights ON");
 
@@ -150,7 +147,7 @@ public class DebugActivity extends AppCompatActivity {
                 sendCommandOverBLTH();
             } else {
                 headlight_switch.setText(R.string.headlight_status_ON);
-                headlightStatusLabel.setText(getString(R.string.headlight_value, "OFF"));
+//                headlightStatusLabel.setText(getString(R.string.headlight_value, "OFF"));
                 headlight_switch.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200));
                 Log.v(LOG_TAG, "Headlights OFF");
 
@@ -191,6 +188,15 @@ public class DebugActivity extends AppCompatActivity {
         });
     }
 
+    // Method to convert a byte array to a hexadecimal string
+    private String byteArrayToHexString(byte[] bytes) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (byte b : bytes) {
+            stringBuilder.append(String.format("%02X ", b));
+        }
+        return stringBuilder.toString();
+    }
+
     private void connectToDevice(String deviceAddress) {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         connectedDevice = bluetoothAdapter.getRemoteDevice(deviceAddress);
@@ -206,12 +212,111 @@ public class DebugActivity extends AppCompatActivity {
             bluetoothSocket.connect();
             Log.v(LOG_TAG, "Connected to device: " + connectedDevice.getName());
             connection_status.setText(getString(R.string.connection_CNTD));
-            TBS_Command = "Connection established with Bluetooth device!";
-            sendCommandOverBLTH();
+            new ReceiveDataTask().start();
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error connecting to device: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    // Define a thread to receive data from the ESP32
+    private class ReceiveDataTask extends Thread {
+        @Override
+        public void run() {
+            byte[] buffer = new byte[10];
+            try {
+                while (true) {
+                    if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+                        // Read 10 bytes from the Bluetooth input stream
+                        int bytesRead = bluetoothSocket.getInputStream().read(buffer);
+                        if (bytesRead == 10) {
+                            runOnUiThread(() -> interpretReceivedData(buffer));
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Method to interpret received data and update views
+    private void interpretReceivedData(byte[] data) {
+        if (data[0] == (byte) 0xAA && data[9] == (byte) 0xBB) {
+            int command = data[1] & 0xFF; // Convert the byte to an unsigned integer
+            switch (command) {
+                case 0xA1:
+//                    float speedKMPH = ((data[4]); // Current speed in km/h
+//                    int temperature = data[7]; // Temperature in Celsius
+                    float speedMPH = convertKMPHtoMPH(data[4]);
+                    int temperatureF = convertCtoF(data[7]);
+                    // Update relevant TextViews with received data
+                    updateSpeedAndTemperature(speedMPH, temperatureF);
+                    break;
+                case 0xA2:
+                    int odometer = data[4]; // Odometer value (unknown format)
+                    // Update relevant TextView with received data
+                    updateOdometer(odometer);
+                    break;
+                case 0xA3:
+                    int maxSpeedMPH = (int) convertKMPHtoMPH(data[3]); // Max speed in km/h
+                    // Update relevant TextViews with received data
+                    updateMaxSpeed(maxSpeedMPH);
+                    break;
+                case 0xA4:
+                    byte headlightStatus = data[7]; // 0x00 off, 0x10 on
+                    // Update relevant TextViews with received data
+                    updateHeadlightStatus(headlightStatus);
+                    break;
+                default:
+                    // Handle unknown command or print raw data
+                    Log.e(LOG_TAG, "Received Unknown Command: " + byteArrayToHexString(data));
+                    break;
+            }
+        }
+    }
+
+    // Convert mph to km/h
+    float mphToKmph(float mph) {
+        return (float) (mph * 1.60934);
+    }
+
+    // Convert km/h to mph
+    private float convertKMPHtoMPH(float kmph) {
+        return kmph / 1.60934f;
+    }
+
+    // Convert Celsius to Fahrenheit
+    private int convertCtoF(int celsius) {
+        return (int) (celsius * 1.8 + 32);
+    }
+
+    // Update speed and temperature TextViews
+    private void updateSpeedAndTemperature(float speed, int temperature) {
+        TextView currentSpeedLabel = findViewById(R.id.speed);
+        currentSpeedLabel.setText(getString(R.string.speed_value, speed));
+        TextView temperatureLabel = findViewById(R.id.temp);
+        temperatureLabel.setText(getString(R.string.temp_value, temperature));
+    }
+
+    // Update odometer TextView
+    private void updateOdometer(int odometer) {
+        TextView odometerLabel = findViewById(R.id.odometer_value);
+        odometerLabel.setText(getString(R.string.odometer_value, odometer));
+    }
+
+    private void updateMaxSpeed(float maxSpeedKMPH) {
+        // Update TextViews or UI elements with received max speed and run time data
+        TextView maxSpeedLabel = findViewById(R.id.setSpeed);
+        maxSpeedLabel.setText(getString(R.string.setSpeed_value, maxSpeedKMPH));
+    }
+
+    private void updateHeadlightStatus(byte headlightStatus) {
+        // Update TextViews or UI elements with received headlight status data
+        // For example:
+        TextView headlightStatusLabel = findViewById(R.id.headlight_status);
+        String statusText = (headlightStatus == 0x00) ? "Off" : "On";
+        headlightStatusLabel.setText(getString(R.string.headlight_value, statusText));
     }
 
     /**
@@ -220,8 +325,8 @@ public class DebugActivity extends AppCompatActivity {
     private void sendCommandOverBLTH() {
         if (bluetoothSocket != null) {
             try {
-                bluetoothSocket.getOutputStream().write(TBS_Command.getBytes());
-                Log.v(LOG_TAG, "Sent command over Bluetooth: " + TBS_Command);
+                bluetoothSocket.getOutputStream().write(TBS_Command);
+                Log.v(LOG_TAG, "Sent command over Bluetooth: " + byteArrayToHexString(TBS_Command));
                 TBS_Command = null;
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error sending command over Bluetooth: " + e.getMessage());
@@ -230,22 +335,37 @@ public class DebugActivity extends AppCompatActivity {
         }
     }
 
-    private String generateByteCommand(String command, int value) {
-        String hexValue = Integer.toHexString(value);
-        String byteCommand = "";
+    private byte[] generateByteCommand(String command, int value) {
+        byte[] byteCommand;
+        Log.v(LOG_TAG, "The passed in value is: " + mphToKmph(value));
 
         if (command.equals("a3")) {
-            // Generate byte command for MAX SPEED command
-            // Byte 1: a3, Byte 2: 00, Byte 3: 00, Byte 4: value
-            byteCommand = "a30000" + hexValue;
+            // Generate byte command for MAX SPEED command aa06061eb4bb
+            byte kmph = (byte) (value * 1.609);
+            byte checksum = (byte) 0xB4; // Checksum value for speed change
+            byteCommand = new byte[]{(byte) 0xAA, (byte) 0x06, (byte) 0x06, kmph, checksum, (byte) 0xBB};
         } else if (command.equals("a4")) {
             // Generate byte command for HEADLIGHT STATUS command
-            // Byte 1: a4, Byte 2: ac, Byte 3: 00, Byte 4: 00, Byte 5: value
-            byteCommand = "a4ac0000" + hexValue;
+            byte onOffValue = (byte) (value == 1 ? 0x01 : 0x00);
+            byte onOffByte = (byte) (value == 1 ? 0xAA : 0xAB);
+            Log.v(LOG_TAG, String.valueOf(onOffValue));
+            byteCommand = new byte[]{(byte) 0xAA, (byte) 0x07, (byte) 0x06, onOffValue, onOffByte, (byte) 0xBB};
+        } else {
+            byteCommand = new byte[0]; // Return empty byte array for unknown commands
         }
 
         return byteCommand;
     }
+
+
+    private byte calculateChecksum(byte[] byteArray) {
+        byte checksum = 0x00;
+        for (byte b : byteArray) {
+            checksum += b;
+        }
+        return checksum;
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
