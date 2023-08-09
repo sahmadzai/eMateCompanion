@@ -246,15 +246,14 @@ public class DebugActivity extends AppCompatActivity {
             int command = data[1] & 0xFF; // Convert the byte to an unsigned integer
             switch (command) {
                 case 0xA1:
-//                    float speedKMPH = ((data[4]); // Current speed in km/h
-//                    int temperature = data[7]; // Temperature in Celsius
-                    float speedMPH = convertKMPHtoMPH(data[4]);
+                    int speedRPM = ((data[4]&0xFF) << 8) | (data[5] & 0xFF);
+                    float speedMPH = convertRPMtoMPH(speedRPM); // Convert RPM to speed in mph
                     int temperatureF = convertCtoF(data[7]);
                     // Update relevant TextViews with received data
                     updateSpeedAndTemperature(speedMPH, temperatureF);
                     break;
                 case 0xA2:
-                    int odometer = data[4]; // Odometer value (unknown format)
+                    int odometer = data[4]; // Odometer value based on throttle (unknown value)
                     // Update relevant TextView with received data
                     updateOdometer(odometer);
                     break;
@@ -270,14 +269,14 @@ public class DebugActivity extends AppCompatActivity {
                     break;
                 default:
                     // Handle unknown command or print raw data
-                    Log.e(LOG_TAG, "Received Unknown Command: " + byteArrayToHexString(data));
+//                    Log.e(LOG_TAG, "Received Unknown Command: " + byteArrayToHexString(data));
                     break;
             }
         }
     }
 
     // Convert mph to km/h
-    float mphToKmph(float mph) {
+    private float mphToKmph(float mph) {
         return (float) (mph * 1.60934);
     }
 
@@ -285,7 +284,14 @@ public class DebugActivity extends AppCompatActivity {
     private float convertKMPHtoMPH(float kmph) {
         return kmph / 1.60934f;
     }
+    //Convert motor rpm's to mph
+    private float convertRPMtoMPH(int rpm) {
+        float wheelRadiusInches = 7.0f; // Radius of the wheel in inches
+        float wheelCircumferenceInches = 2.0f * (float) Math.PI * wheelRadiusInches;
+        float conversionFactor = 60.0f / 63360.0f; // Convert inches per minute to miles per hour
 
+        return (rpm * wheelCircumferenceInches * conversionFactor);
+    }
     // Convert Celsius to Fahrenheit
     private int convertCtoF(int celsius) {
         return (int) (celsius * 1.8 + 32);
@@ -342,8 +348,9 @@ public class DebugActivity extends AppCompatActivity {
         if (command.equals("a3")) {
             // Generate byte command for MAX SPEED command aa06061eb4bb
             byte kmph = (byte) (value * 1.609);
-            byte checksum = (byte) 0xB4; // Checksum value for speed change
-            byteCommand = new byte[]{(byte) 0xAA, (byte) 0x06, (byte) 0x06, kmph, checksum, (byte) 0xBB};
+            byteCommand = new byte[]{(byte) 0xAA, (byte) 0x06, (byte) 0x06, kmph, (byte) 0x00, (byte) 0xBB};
+            byte checksum = calculateChecksum(byteCommand); // Checksum value for speed change
+            byteCommand[4] = checksum;
         } else if (command.equals("a4")) {
             // Generate byte command for HEADLIGHT STATUS command
             byte onOffValue = (byte) (value == 1 ? 0x01 : 0x00);
@@ -360,9 +367,8 @@ public class DebugActivity extends AppCompatActivity {
 
     private byte calculateChecksum(byte[] byteArray) {
         byte checksum = 0x00;
-        for (byte b : byteArray) {
-            checksum += b;
-        }
+        for(int i = 0; i < byteArray.length - 2; i++)
+            checksum ^= byteArray[i];
         return checksum;
     }
 
