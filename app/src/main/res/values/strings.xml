@@ -19,6 +19,7 @@
     <string name="headlight_label">Headlight Status:</string>
     <string name="headlight_value">%1$s</string>
     <string name="blank_value">-</string>
+    <string name="gps_value">%.2f mph</string>
     <string name="setSpeed_slider_label">Set Speed</string>
     <string name="headlight_status_ON">Turn On</string>
     <string name="headlight_status_OFF">Turn Off</string>

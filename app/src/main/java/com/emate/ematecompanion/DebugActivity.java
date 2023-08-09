@@ -1,5 +1,6 @@
 package com.emate.ematecompanion;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -9,9 +10,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -39,12 +45,25 @@ public class DebugActivity extends AppCompatActivity {
     private BluetoothDevice connectedDevice; // Added variable to store the connected device
     private BluetoothSocket bluetoothSocket; // Added variable to manage the Bluetooth socket
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // A common UUID for SPP
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
+    private TextView textViewGpsSpeed;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == BLUETOOTH_PERMISSION_REQUEST_CODE) {
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                requestLocationUpdates();
+            } else {
+                // Permission denied, handle accordingly (e.g., show an error message)
+                Log.e(LOG_TAG, "Location Permission denied");
+                // Prompt the user for permissions
+                Snackbar.make(findViewById(R.id.connection_status), "Please accept Location permissions to use the app's GPS!", Snackbar.LENGTH_SHORT).setDuration(LENGTH_SHORT).show();
+            }
+        } else if (requestCode == BLUETOOTH_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.v(LOG_TAG, "Permission granted by user, proceeding with data communication.");
                 // Permission granted, you can now proceed with sending data over Bluetooth
@@ -90,6 +109,46 @@ public class DebugActivity extends AppCompatActivity {
             // For example, you can pass this address to your Bluetooth connection method
             connectToDevice(deviceAddress);
         }
+
+        textViewGpsSpeed = findViewById(R.id.textViewGpsSpeed);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                double gpsSpeedMetersPerSecond = location.getSpeed(); // Speed in meters per second
+                double gpsSpeedMPH = gpsSpeedMetersPerSecond * 2.237;
+//                double gpsSpeedKmph = gpsSpeedMetersPerSecond * 3.6; // Convert to km/h
+
+                textViewGpsSpeed.setText(getString(R.string.gps_value, gpsSpeedMPH));
+            }
+
+            // Implement other methods of LocationListener if needed
+        };
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        requestLocationUpdates();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        removeLocationUpdates();
+    }
+
+    private void requestLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener, Looper.getMainLooper());
+    }
+
+    private void removeLocationUpdates() {
+        locationManager.removeUpdates(locationListener);
     }
 
     private void initFields(TextView maxSpeedLabel, TextView currentSpeedLabel, TextView headlightStatusLabel) {

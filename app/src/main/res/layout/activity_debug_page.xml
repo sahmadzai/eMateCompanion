@@ -199,11 +199,23 @@
     <!-- END OUTPUT FIELDS -->
 
     <TextView
+        android:id="@+id/textViewGpsSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="60dp"
+        android:textSize="30sp"
+        app:layout_constraintTop_toBottomOf="@id/headlight_label"
+        app:layout_constraintBottom_toTopOf="@id/setSpeed_slider_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
         android:id="@+id/setSpeed_slider_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
         android:text="@string/setSpeed_slider_label"
+        app:layout_constraintTop_toBottomOf="@id/textViewGpsSpeed"
         app:layout_constraintBottom_toTopOf="@id/setSpeed_slider"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -213,7 +225,7 @@
         style="@style/Widget.AppCompat.SeekBar.Discrete"
         android:layout_width="0dp"
         android:layout_height="20dp"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="100dp"
         android:max="17"
         android:progress="12"
         app:layout_constraintBottom_toTopOf="@+id/headlight_switch"
@@ -224,7 +236,7 @@
         android:id="@+id/headlight_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="148dp"
+        android:layout_marginBottom="100dp"
         android:text="@string/headlight_status_ON"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/start_blth"
@@ -234,7 +246,7 @@
         android:id="@+id/start_blth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="100dp"
         android:text="@string/start_blth"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/stop_blth"
@@ -244,7 +256,7 @@
         android:id="@+id/stop_blth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="100dp"
         android:text="@string/stop_blth"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
