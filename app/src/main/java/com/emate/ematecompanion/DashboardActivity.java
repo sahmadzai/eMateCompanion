@@ -89,8 +89,8 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
                     // Move the camera to the user's location with bearing (angle) and zoom
                     CameraPosition cameraPosition = new CameraPosition.Builder()
                             .target(userLocation)
-                            .zoom(16)  // Adjust the zoom level as needed
-                            .bearing(compassListener.getCurrentDegree())  // Set the angle of the camera using compass data
+                            .zoom(17)  // Adjust the zoom level as needed
+                            .bearing(compassListener.getFusedOrientation())  // Set the angle of the camera using compass data
                             .tilt(30)  // Set the tilt angle for a navigation-like view
                             .build();
 
@@ -110,12 +110,17 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
         sensorManager.unregisterListener(compassListener);
     }
 
-    private static class CompassListener implements SensorEventListener {
-        private static final float FILTER_ALPHA = 1.0f;
+    private class CompassListener implements SensorEventListener {
+        private static final float FILTER_ALPHA = 0.1f;
 
-        private final float[] rotationMatrix = new float[9];
-        private final float[] orientationValues = new float[3];
+        private float[] rotationMatrix = new float[9];
+        private float[] orientationValues = new float[3];
         private float currentDegree = 0;
+        private float[] angularVelocity = new float[3];
+
+        // Complementary filter parameters
+        private static final float COMPLEMENTARY_COEFFICIENT = 0.98f;
+        private float fusedOrientation = 0;
 
         @Override
         public void onSensorChanged(SensorEvent event) {
@@ -124,6 +129,17 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
                 SensorManager.getOrientation(rotationMatrix, orientationValues);
                 float degree = (float) Math.toDegrees(orientationValues[0]);
                 currentDegree = currentDegree * (1 - FILTER_ALPHA) + degree * FILTER_ALPHA;
+            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                angularVelocity[0] = event.values[0];
+                angularVelocity[1] = event.values[1];
+                angularVelocity[2] = event.values[2];
+
+                // Calculate the change in orientation using gyroscope data
+                float deltaOrientation = angularVelocity[2] * (1.0f / 60.0f); // Integration over time step
+
+                // Apply complementary filter
+                fusedOrientation = COMPLEMENTARY_COEFFICIENT * (fusedOrientation + deltaOrientation) +
+                        (1 - COMPLEMENTARY_COEFFICIENT) * orientationValues[0];
             }
         }
 
@@ -134,6 +150,10 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
 
         public float getCurrentDegree() {
             return currentDegree;
+        }
+
+        public float getFusedOrientation() {
+            return fusedOrientation;
         }
     }
 }
