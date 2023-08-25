@@ -25,7 +25,12 @@ import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.UUID;
 
 public class DebugActivity extends AppCompatActivity {
@@ -49,6 +54,8 @@ public class DebugActivity extends AppCompatActivity {
     private TextView textViewGpsSpeed;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private boolean loggingEnabled = false;
+    private FileWriter logFileWriter;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -125,6 +132,12 @@ public class DebugActivity extends AppCompatActivity {
 
             // Implement other methods of LocationListener if needed
         };
+
+        Button startLogButton = findViewById(R.id.start_log_button);
+        Button stopLogButton = findViewById(R.id.stop_log_button);
+
+        startLogButton.setOnClickListener(view -> startLogging(startLogButton, stopLogButton));
+        stopLogButton.setOnClickListener(view -> stopLogging(startLogButton, stopLogButton));
     }
 
     @Override
@@ -149,6 +162,60 @@ public class DebugActivity extends AppCompatActivity {
 
     private void removeLocationUpdates() {
         locationManager.removeUpdates(locationListener);
+    }
+
+    private File getLogFile() {
+        // Get the directory where the app's files are stored
+        File appFilesDir = getExternalFilesDir(null);
+
+        // Create a new directory named "logs" if it doesn't exist
+        File logsDir = new File(appFilesDir, "logs");
+        if (!logsDir.exists()) {
+            logsDir.mkdirs();
+        }
+
+        // Create a new log file named "log.txt" inside the "logs" directory
+        return new File(logsDir, "logCommands.txt");
+    }
+
+    private void startLogging(Button startLogButton, Button stopLogButton) {
+        if (!loggingEnabled) {
+            loggingEnabled = true;
+            startLogButton.setEnabled(false);
+            stopLogButton.setEnabled(true);
+
+            // Open a log file for writing
+            try {
+                logFileWriter = new FileWriter(getLogFile(), true);
+                logMessage("Log started at " + getCurrentDateTime());
+            } catch (IOException e) {
+                String text = "Error opening log file: " + e.getMessage();
+                Log.e(LOG_TAG, text);
+                Snackbar.make(startLogButton, text, Snackbar.LENGTH_SHORT).setDuration(LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void stopLogging(Button startLogButton, Button stopLogButton) {
+        if (loggingEnabled) {
+            loggingEnabled = false;
+            startLogButton.setEnabled(true);
+            stopLogButton.setEnabled(false);
+
+            // Close the log file
+            try {
+                if (logFileWriter != null) {
+                    logMessage("Log stopped at " + getCurrentDateTime());
+                    logFileWriter.close();
+                }
+            } catch (IOException e) {
+                String text = "Error closing log file: " + e.getMessage();
+                Log.e(LOG_TAG, text);
+                Snackbar.make(startLogButton, text, Snackbar.LENGTH_SHORT).setDuration(LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initFields(TextView maxSpeedLabel, TextView currentSpeedLabel, TextView headlightStatusLabel) {
@@ -305,7 +372,7 @@ public class DebugActivity extends AppCompatActivity {
             int command = data[1] & 0xFF; // Convert the byte to an unsigned integer
             switch (command) {
                 case 0xA1:
-                    int speedRPM = ((data[4]&0xFF) << 8) | (data[5] & 0xFF);
+                    float speedRPM = ((data[4]&0xFF) << 8) | (data[5] & 0xFF);
                     float speedMPH = convertRPMtoMPH(speedRPM); // Convert RPM to speed in mph
                     int temperatureF = convertCtoF(data[7]);
                     // Update relevant TextViews with received data
@@ -331,7 +398,33 @@ public class DebugActivity extends AppCompatActivity {
 //                    Log.e(LOG_TAG, "Received Unknown Command: " + byteArrayToHexString(data));
                     break;
             }
+            // Log the received data if logging is enabled
+            if (loggingEnabled && logFileWriter != null) {
+                try {
+                    String hexData = byteArrayToHexString(data);
+                    logMessage(hexData);
+                } catch (IOException e) {
+                    String text = "Error writing to log file: " + e.getMessage();
+                    Log.e(LOG_TAG, text);
+                    Snackbar.make(textViewGpsSpeed, text, Snackbar.LENGTH_SHORT).setDuration(LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
+            }
         }
+    }
+
+    // Add the logMessage() method
+    private void logMessage(String message) throws IOException {
+        Log.v(LOG_TAG, message);
+        if (logFileWriter != null) {
+            logFileWriter.append(getCurrentDateTime() + " " + message + "\n");
+        }
+    }
+
+    // Add the getCurrentDateTime() method
+    private String getCurrentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
     // Convert mph to km/h
@@ -344,7 +437,7 @@ public class DebugActivity extends AppCompatActivity {
         return kmph / 1.60934f;
     }
     //Convert motor rpm's to mph
-    private float convertRPMtoMPH(int rpm) {
+    private float convertRPMtoMPH(float rpm) {
         float wheelRadiusInches = 7.0f; // Radius of the wheel in inches
         float wheelCircumferenceInches = 2.0f * (float) Math.PI * wheelRadiusInches;
         float conversionFactor = 60.0f / 63360.0f; // Convert inches per minute to miles per hour
