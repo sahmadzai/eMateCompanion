@@ -166,13 +166,23 @@
         tools:layout_editor_absoluteY="109dp" />
 
     <TextView
-        android:id="@+id/voltage"
-        android:layout_width="4dp"
-        android:layout_height="13dp"
+        android:id="@+id/voltageByte7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="100dp"
         android:layout_marginTop="20dp"
         android:text="@string/blank_value"
         app:layout_constraintStart_toEndOf="@+id/voltage_label"
+        app:layout_constraintTop_toBottomOf="@id/temp" />
+
+    <TextView
+        android:id="@+id/voltageByte4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/blank_value"
+        app:layout_constraintStart_toEndOf="@+id/voltageByte7"
         app:layout_constraintTop_toBottomOf="@id/temp" />
 
     <TextView
@@ -182,7 +192,7 @@
         android:layout_marginTop="25dp"
         android:layout_marginStart="102dp"
         android:text="@string/blank_value"
-        app:layout_constraintTop_toBottomOf="@id/voltage"
+        app:layout_constraintTop_toBottomOf="@id/voltageByte7"
         app:layout_constraintStart_toEndOf="@+id/current_label"
         tools:layout_editor_absoluteY="189dp" />
 
@@ -226,8 +236,7 @@
         android:layout_width="0dp"
         android:layout_height="20dp"
         android:layout_marginBottom="100dp"
-        android:max="17"
-        android:progress="12"
+        android:max="32"
         app:layout_constraintBottom_toTopOf="@+id/headlight_switch"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

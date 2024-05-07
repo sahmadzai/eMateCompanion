@@ -26,6 +26,7 @@ public class BLTConnectActivity extends AppCompatActivity {
     private String LOG_TAG = "BLTConnectActivity";
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1;
     private BluetoothAdapter bluetoothAdapter;
+    private BluetoothService bluetoothService;
     private ArrayList<BluetoothDevice> pairedDevicesList;
 
     @Override
@@ -84,11 +85,19 @@ public class BLTConnectActivity extends AppCompatActivity {
             BluetoothDevice selectedDevice = pairedDevicesList.get(position);
             // Show a confirm connection dialog before connecting which prompts the user to click the device name again to confirm
             Toast.makeText(this, "Confirm you want to connect to: " + selectedDevice.getName() + "by tapping the name again.", Toast.LENGTH_SHORT).show();
+
             pairedDevicesListView.setOnItemClickListener((parent1, view1, position1, id1) -> {
                 Toast.makeText(this, "Connecting to: " + selectedDevice.getName(), Toast.LENGTH_SHORT).show();
                 // Connect to the selected device
                 connectToDevice(selectedDevice);
             });
+
+            Intent serviceIntent = new Intent(this, BluetoothService.class);
+            startService(serviceIntent); // This starts the service. It will remain running until stopped.
+
+            if (bluetoothService != null) {
+                bluetoothService.connectToDevice(selectedDevice.getAddress()); // deviceAddress is the MAC address of the selected device.
+            }
         });
     }
 

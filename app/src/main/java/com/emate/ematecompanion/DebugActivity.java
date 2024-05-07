@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -52,6 +53,7 @@ public class DebugActivity extends AppCompatActivity {
     private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // A common UUID for SPP
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private TextView textViewGpsSpeed;
+    private SeekBar speed_seekbar;
     private LocationManager locationManager;
     private LocationListener locationListener;
     private boolean loggingEnabled = false;
@@ -95,6 +97,8 @@ public class DebugActivity extends AppCompatActivity {
         TextView currentSpeedLabel = (TextView) findViewById(R.id.speed);
         TextView headlightStatusLabel = (TextView) findViewById(R.id.headlight_status);
         Button headlight_switch = (Button) findViewById(R.id.headlight_switch);
+
+        speed_seekbar = (SeekBar) findViewById(R.id.setSpeed_slider);
 
         // Setup and start the seekbar listener
         initSeekBar(maxSpeedLabel);
@@ -230,9 +234,7 @@ public class DebugActivity extends AppCompatActivity {
      * The listener updates the skill level variable when the user changes the value of the seekbar.
      */
     private void initSeekBar(TextView maxSpeedLabel) {
-        // Initialize seekbar
-        SeekBar skillSeekBar = findViewById(R.id.setSpeed_slider);
-        skillSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        speed_seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 int usr_speed = i + 3;
@@ -374,6 +376,13 @@ public class DebugActivity extends AppCompatActivity {
                 case 0xA1:
                     float speedRPM = ((data[4]&0xFF) << 8) | (data[5] & 0xFF);
                     float speedMPH = convertRPMtoMPH(speedRPM); // Convert RPM to speed in mph
+                    if (current_speed == 0.0) { // Check if speed is zero
+                        int batteryPercentage = interpretBatteryPercentage(data[3]); // Assuming Byte 4 contains the battery percentage
+                        updateBatteryIndicator(batteryPercentage);
+                    }
+//                    float batteryPercentageFromByte4 = interpretBatteryPercentage(data[3]); // Byte 4 is data[3] because of 0-based indexing
+//                    updateBatteryPercentage(batteryPercentageFromByte4);
+//                    Log.v(LOG_TAG, byteArrayToHexString(data));
                     int temperatureF = convertCtoF(data[7]);
                     // Update relevant TextViews with received data
                     updateSpeedAndTemperature(speedMPH, temperatureF);
@@ -426,6 +435,22 @@ public class DebugActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());
     }
+    private int interpretBatteryPercentage(byte byte4) {
+        float value = byte4 & 0xFF; // Convert to unsigned int
+//        Log.v(LOG_TAG, String.valueOf(value));
+//        return ((int) (value / 253)*100);
+        return (int) value;
+    }
+
+    private void updateBatteryPercentage(float percentageFromByte4) {
+        TextView batteryPercentageLabelByte4 = findViewById(R.id.voltageByte4); // Assuming you have added a TextView with this id in your layout
+        batteryPercentageLabelByte4.setText(getString(R.string.voltage_value, percentageFromByte4));
+    }
+
+    private void updateBatteryIndicator(int percentage) {
+        ProgressBar batteryIndicator = findViewById(R.id.battery_indicator);
+        batteryIndicator.setProgress(percentage);
+    }
 
     // Convert mph to km/h
     private float mphToKmph(float mph) {
@@ -467,6 +492,7 @@ public class DebugActivity extends AppCompatActivity {
         // Update TextViews or UI elements with received max speed and run time data
         TextView maxSpeedLabel = findViewById(R.id.setSpeed);
         maxSpeedLabel.setText(getString(R.string.setSpeed_value, maxSpeedKMPH));
+        speed_seekbar.setProgress((int) maxSpeedKMPH);
     }
 
     private void updateHeadlightStatus(byte headlightStatus) {

@@ -13,7 +13,7 @@
     <string name="temp_label">Temperature (F):</string>
     <string name="temp_value">%1$d</string>
     <string name="voltage_label">Voltage:</string>
-    <string name="voltage_value">%.2d</string>
+    <string name="voltage_value">%.2f</string>
     <string name="current_label">Current:</string>
     <string name="current_value">%.2d</string>
     <string name="headlight_label">Headlight Status:</string>

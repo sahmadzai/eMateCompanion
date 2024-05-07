@@ -1,13 +1,25 @@
 package com.emate.ematecompanion;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -24,6 +36,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.LinkedList;
+
 public class DashboardActivity extends FragmentActivity implements OnMapReadyCallback {
     private String LOG_TAG = "DASHBOARDACTIVITY";
     private GoogleMap mMap;
@@ -34,6 +48,11 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
     private SensorManager sensorManager;
     private Sensor rotationVectorSensor;
     private CompassListener compassListener;
+    private BluetoothService bluetoothService;
+    private boolean isBound = false;
+    private SpeedometerGauge speedometer;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -50,6 +69,8 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        TextView textViewGpsSpeed = findViewById(R.id.textViewGpsSpeed);
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         locationRequest = LocationRequest.create();
@@ -61,7 +82,75 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        Button debug_btn = findViewById(R.id.debug_mode);
+        debug_btn.setOnClickListener(view -> {
+            Intent intent = new Intent(this, DebugActivity.class);
+            startActivity(intent);
+        });
+
+        // Bind to BluetoothService
+        Intent intent = new Intent(this, BluetoothService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        // Speedometer
+        speedometer = findViewById(R.id.speedometer);
+        speedometer.setLabelConverter((progress, maxProgress) -> String.valueOf((int) Math.round(progress)));
+        speedometer.setMaxSpeed(30);
+        speedometer.setMajorTickStep(5);
+        speedometer.setMinorTicks(4);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        // Implement other methods of LocationListener if needed
+        locationListener = location -> {
+            double gpsSpeedMetersPerSecond = location.getSpeed(); // Speed in meters per second
+//                double gpsSpeedMPH = gpsSpeedMetersPerSecond * 2.237;
+            double gpsSpeedKmph = gpsSpeedMetersPerSecond * 3.6; // Convert to km/h
+            Log.v(LOG_TAG, String.valueOf(gpsSpeedKmph));
+            speedometer.setSpeed(gpsSpeedKmph, 1000, 0);
+            textViewGpsSpeed.setText(getString(R.string.gps_value, gpsSpeedKmph));
+        };
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Register the BroadcastReceiver
+        IntentFilter filter = new IntentFilter("BluetoothData");
+        registerReceiver(bluetoothDataReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Unregister the BroadcastReceiver
+        unregisterReceiver(bluetoothDataReceiver);
+    }
+
+    // Service connection to bind with BluetoothService
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) service;
+            bluetoothService = binder.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+        }
+    };
+
+    // BroadcastReceiver to receive data from BluetoothService
+    private final BroadcastReceiver bluetoothDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            byte[] data = intent.getByteArrayExtra("data");
+            // TODO: Handle the received data (update UI elements, etc.)
+            // For example, if you want to update speedometer, you can do it here.
+        }
+    };
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -108,6 +197,11 @@ public class DashboardActivity extends FragmentActivity implements OnMapReadyCal
     protected void onDestroy() {
         super.onDestroy();
         sensorManager.unregisterListener(compassListener);
+        // Unbind from BluetoothService
+        if (isBound) {
+            unbindService(serviceConnection);
+            isBound = false;
+        }
     }
 
     private class CompassListener implements SensorEventListener {
